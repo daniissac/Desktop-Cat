@@ -1,109 +1,135 @@
-import tkinter as tk
-import time
+import sys
 import random
-from random import randint
-from win32api import GetMonitorInfo, MonitorFromPoint
+import math
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel
+from PyQt6.QtCore import Qt, QTimer, QPointF
+from PyQt6.QtGui import QPixmap
 
-monitor_info=GetMonitorInfo(MonitorFromPoint((0, 0)))
-work_area=monitor_info.get('Work')
-screen_width=work_area[2]
-work_height=work_area[3]
-
-idle_num =[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] #12
-sleep_num = [19, 20, 21, 22, 23, 24, 25] #26
-walk_left = [13, 14, 15]
-walk_right = [16, 17, 18]
-
-class Ket:
+class CatPet(QMainWindow):
     def __init__(self):
-        self.window=tk.Tk()
+        super().__init__()
+        self.initUI()
 
-        self.idle=[tk.PhotoImage(file='assets/idle1.png'), tk.PhotoImage(file='assets/idle2.png'), tk.PhotoImage(file='assets/idle3.png'), tk.PhotoImage(file='assets/idle4.png')]
+    def initUI(self):
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
-        self.idle_to_sleeping=[tk.PhotoImage(file='assets/sleeping1.png'), tk.PhotoImage(file='assets/sleeping2.png'), tk.PhotoImage(file='assets/sleeping3.png'), tk.PhotoImage(file='assets/sleeping4.png'), tk.PhotoImage(file='assets/sleeping5.png'), tk.PhotoImage(file='assets/sleeping6.png')]
+        self.label = QLabel(self)
+        self.setCentralWidget(self.label)
 
-        self.sleeping=[tk.PhotoImage(file='assets/zzz1.png'), tk.PhotoImage(file='assets/zzz2.png'), tk.PhotoImage(file='assets/zzz3.png'), tk.PhotoImage(file='assets/zzz4.png')]
+        screen = QApplication.primaryScreen().geometry()
+        self.screen_width = screen.width()
+        self.screen_height = screen.height()
 
-        self.sleeping_to_idle=[tk.PhotoImage(file='assets/sleeping6.png'), tk.PhotoImage(file='assets/sleeping5.png'), tk.PhotoImage(file='assets/sleeping4.png'), tk.PhotoImage(file='assets/sleeping3.png'), tk.PhotoImage(file='assets/sleeping2.png'), tk.PhotoImage(file='assets/sleeping1.png')]
+        self.pet_width = 72
+        self.pet_height = 64
 
-        self.walking_left=[tk.PhotoImage(file='assets/walkingleft1.png'), tk.PhotoImage(file='assets/walkingleft2.png'), tk.PhotoImage(file='assets/walkingleft3.png'), tk.PhotoImage(file='assets/walkingleft4.png')]
+        self.pos = QPointF(random.randint(0, self.screen_width - self.pet_width),
+                           random.randint(0, self.screen_height - self.pet_height))
 
-        self.walking_right=[tk.PhotoImage(file='assets/walkingright1.png'), tk.PhotoImage(file='assets/walkingright2.png'), tk.PhotoImage(file='assets/walkingright3.png'), tk.PhotoImage(file='assets/walkingright4.png') ]
+        self.setGeometry(int(self.pos.x()), int(self.pos.y()), self.pet_width, self.pet_height)
 
-        self.x=int(screen_width*0.8)
-        self.y=work_height-64
+        self.load_images()
 
-        self.i_frame=0
-        self.state=1
-        self.event_number=randint(1, 3)
+        self.i_frame = 0
+        self.state = 0  # Start in idle state
+        self.direction = QPointF(random.uniform(-1, 1), random.uniform(-1, 1))
+        self.direction /= math.sqrt(self.direction.x()**2 + self.direction.y()**2)  # Normalize
 
-        self.frame=self.idle[0]
+        self.frame = self.idle[0]
+        self.label.setPixmap(self.frame)
 
-        self.window.config(highlightbackground='black')
-        self.label = tk.Label(self.window,bd=0,bg='black')
-        self.window.overrideredirect(True)
-        self.window.attributes('-topmost', True)
-        self.window.wm_attributes('-transparentcolor','black')
+        self.movement_timer = 0
+        self.rest_timer = 0
+        self.animation_slowdown = 0  # New variable to slow down certain animations
 
-        self.label.pack()
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update)
+        self.timer.start(50)  # Update every 50ms for smooth animation
 
-        self.window.after(1, self.update, self.i_frame, self.state, self.event_number, self.x)
-        self.window.mainloop()
+    def load_images(self):
+        self.idle = [QPixmap(f'assets/idle{i}.png') for i in range(1, 5)]
+        self.idle_to_sleeping = [QPixmap(f'assets/sleeping{i}.png') for i in range(1, 7)]
+        self.sleeping = [QPixmap(f'assets/zzz{i}.png') for i in range(1, 5)]
+        self.sleeping_to_idle = [QPixmap(f'assets/sleeping{i}.png') for i in range(6, 0, -1)]
+        self.walking_left = [QPixmap(f'assets/walkingleft{i}.png') for i in range(1, 5)]
+        self.walking_right = [QPixmap(f'assets/walkingright{i}.png') for i in range(1, 5)]
 
+    def animate(self, array, slowdown_factor=1):
+        self.animation_slowdown += 1
+        if self.animation_slowdown >= slowdown_factor:
+            self.animation_slowdown = 0
+            if self.i_frame < len(array) - 1:
+                self.i_frame += 1
+            else:
+                self.i_frame = 0
+        return array[self.i_frame]
 
-    def event(self, i_frame, state, event_number, x):
-        if self.event_number in idle_num:
-            self.state=0
-            self.window.after(400, self.update, self.i_frame, self.state, self.event_number, self.x)
-        elif self.event_number==12:
-            self.state=1
-            self.window.after(100, self.update, self.i_frame, self.state, self.event_number, self.x)
-        elif self.event_number in walk_left:
-            self.state=4
-            self.window.after(100, self.update, self.i_frame, self.state, self.event_number, self.x)
-        elif self.event_number in walk_right:
-            self.state=5
-            self.window.after(100, self.update, self.i_frame, self.state, self.event_number, self.x)
-        elif self.event_number in sleep_num:
-            self.state=2
-            self.window.after(400,self.update, self.i_frame, self.state, self.event_number, self.x)
-        elif self.event_number == 26:
-            self.state = 3
-            self.window.after(100, self.update, self.i_frame, self.state, self.event_number, self.x)
+    def update(self):
+        if self.state == 0:  # Idle
+            self.frame = self.animate(self.idle, slowdown_factor=6)  # Slower blinking and tail movement
+            self.rest_timer += 1
+            if self.rest_timer > 100 and random.random() < 0.02:  # 2% chance to start walking after resting
+                self.state = 4
+                self.movement_timer = random.randint(20, 100)  # Random movement duration
+                self.rest_timer = 0
+            elif random.random() < 0.001:  # 0.1% chance to start sleeping
+                self.state = 1
+                self.i_frame = 0  # Reset frame index for smooth transition
+        elif self.state == 1:  # Idle to sleeping
+            self.frame = self.animate(self.idle_to_sleeping, slowdown_factor=3)  # Slightly slower transition
+            if self.i_frame == len(self.idle_to_sleeping) - 1:
+                self.state = 2
+                self.i_frame = 0
+        elif self.state == 2:  # Sleeping
+            self.frame = self.animate(self.sleeping, slowdown_factor=8)  # Slower sleeping animation
+            if random.random() < 0.005:  # 0.5% chance to wake up
+                self.state = 3
+                self.i_frame = 0
+        elif self.state == 3:  # Sleeping to idle
+            self.frame = self.animate(self.sleeping_to_idle, slowdown_factor=3)  # Slightly slower transition
+            if self.i_frame == len(self.sleeping_to_idle) - 1:
+                self.state = 0
+                self.i_frame = 0
+        elif self.state == 4:  # Walking
+            if self.direction.x() < 0:
+                self.frame = self.animate(self.walking_left)  # Keep walking animation at normal speed
+            else:
+                self.frame = self.animate(self.walking_right)  # Keep walking animation at normal speed
+            
+            # Move the pet
+            speed = random.uniform(0.5, 1.5)  # Variable speed
+            self.pos += self.direction * speed
+            
+            # Check boundaries and change direction if necessary
+            if self.pos.x() < 0 or self.pos.x() > self.screen_width - self.pet_width:
+                self.direction = QPointF(-self.direction.x(), self.direction.y())
+            if self.pos.y() < 0 or self.pos.y() > self.screen_height - self.pet_height:
+                self.direction = QPointF(self.direction.x(), -self.direction.y())
+            
+            # Clamp position to screen boundaries
+            self.pos.setX(max(0, min(self.pos.x(), self.screen_width - self.pet_width)))
+            self.pos.setY(max(0, min(self.pos.y(), self.screen_height - self.pet_height)))
+            
+            self.movement_timer -= 1
+            if self.movement_timer <= 0:
+                if random.random() < 0.7:  # 70% chance to stop and go idle
+                    self.state = 0
+                    self.i_frame = 0
+                else:
+                    # Change to a new random direction
+                    self.direction = QPointF(random.uniform(-1, 1), random.uniform(-1, 1))
+                    self.direction /= math.sqrt(self.direction.x()**2 + self.direction.y()**2)  # Normalize
+                    self.movement_timer = random.randint(20, 100)  # Set a new movement duration
 
-    def animate(self, i_frame, array, event_number, a, b):
-        if self.i_frame<len(array)-1:
-            self.i_frame+=1
-        else:
-            self.i_frame=0
-            self.event_number=randint(a, b)
-        return self.i_frame, self.event_number
+        self.label.setPixmap(self.frame)
+        self.setGeometry(int(self.pos.x()), int(self.pos.y()), self.pet_width, self.pet_height)
 
-    def update(self, i_frame, state, event_number, x):
-    
-        if self.state == 0:
-            self.frame=self.idle[self.i_frame]
-            self.i_frame, self.event_number=self.animate(self.i_frame, self.idle, self.event_number, 1, 18)
-        elif state == 1:
-            self.frame = self.idle_to_sleeping[self.i_frame]
-            self.i_frame, self.event_number = self.animate(self.i_frame, self.idle_to_sleeping, self.event_number,19, 19)
-        elif self.state == 2:
-            self.frame = self.sleeping[self.i_frame]
-            self.i_frame, self.event_number = self.animate(self.i_frame, self.sleeping, self.event_number, 19, 26)
-        elif self.state == 3:
-            self.frame = self.sleeping_to_idle[self.i_frame]
-            self.i_frame, self.event_number=self.animate(self.i_frame, self.sleeping_to_idle, self.event_number, 1, 1)
-        elif self.state == 4 and self.x>0:
-            self.frame=self.walking_left[self.i_frame]
-            self.i_frame, self.event_number=self.animate(self.i_frame, self.walking_left, self.event_number, 1, 18)
-            self.x-=3
-        elif self.state == 5 and x<(screen_width-72):
-            self.frame=self.walking_right[self.i_frame]
-            self.i_frame, self.event_number=self.animate(self.i_frame, self.walking_right, self.event_number, 1, 18)
-            self.x+=3
+def main():
+    app = QApplication(sys.argv)
+    cat = CatPet()
+    cat.show()
+    sys.exit(app.exec())
 
-        self.window.geometry('72x64+'+str(self.x)+'+'+str(self.y))
-        self.label.configure(image=self.frame)
-        self.window.after(1, self.event, self.i_frame, self.state, self.event_number, self.x)
-
-ket=Ket()      
+if __name__ == '__main__':
+    main()
