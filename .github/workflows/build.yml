@@ -74,7 +74,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./CatPet-Windows.zip
+          asset_path: ./dist/CatPet-Windows.zip  # Assuming zip files are in 'dist' directory
           asset_name: CatPet-Windows.zip
           asset_content_type: application/zip
         continue-on-error: true  # Continue even if upload fails
@@ -85,7 +85,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./CatPet-MacOS.zip
+          asset_path: ./dist/CatPet-MacOS.zip  # Assuming zip files are in 'dist' directory
           asset_name: CatPet-MacOS.zip
           asset_content_type: application/zip
         continue-on-error: true  # Continue even if upload fails
