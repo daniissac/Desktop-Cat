@@ -25,7 +25,7 @@ A desktop kitty that sleeps, wanders around, and keeps you company on your scree
 
 2. Set up a virtual environment:
    ```
-   python -m venv venv
+   python3 -m venv venv
    ```
 
 3. Activate the virtual environment:
