@@ -2,7 +2,7 @@
 
 block_cipher = None
 
-a = Analysis(['cat_pet.py'],
+a = Analysis(['main.py'],
              pathex=[],
              binaries=[],
              datas=[('assets', 'assets')],  # Include the assets folder
