@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, macos-latest]  # Removed ubuntu-latest
+        os: [windows-latest, macos-latest]
       fail-fast: false  # This allows other builds to continue if one fails
 
     steps:
@@ -60,7 +60,7 @@ jobs:
 
       - name: Zip artifacts
         run: |
-          for os in windows-latest macos-latest; do  # Removed ubuntu-latest
+          for os in windows-latest macos-latest; do  # Only consider Windows and macOS
             if [ -d "CatPet-$os" ]; then
               zip -r "CatPet-$(echo $os | cut -d'-' -f1 | tr '[:lower:]' '[:upper:]').zip" "CatPet-$os"
             else
