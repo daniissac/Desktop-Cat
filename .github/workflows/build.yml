@@ -29,8 +29,7 @@ jobs:
           pip install PyQt6 pyinstaller
 
       - name: Build with PyInstaller
-        run: |
-          python -m pyinstaller --onefile main.py
+        run: pyinstaller --onefile main.py
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4  # Updated to v4
@@ -40,15 +39,15 @@ jobs:
 
   release:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: [windows-latest, macos-latest]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4  # Updated to v4
 
-      - name: Create Release (using latest version)
+      - name: Create Release
         id: create_release
-        uses: actions/create-release@latest  # Update to latest version
+        uses: actions/create-release@latest 
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
@@ -58,11 +57,11 @@ jobs:
           prerelease: false
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4  # Updated to v4
+        uses: actions/download-artifact@v4 
 
       - name: Zip artifacts
         run: |
-          for os in windows-latest macos-latest ubuntu-latest; do
+          for os in windows-latest macos-latest; do  # Only consider Windows and macOS
             if [ -d "CatPet-$os" ]; then
               zip -r "CatPet-$(echo $os | cut -d'-' -f1 | tr '[:lower:]' '[:upper:]').zip" "CatPet-$os"
             else
@@ -79,7 +78,6 @@ jobs:
           asset_path: ./dist/CatPet-Windows.zip
           asset_name: CatPet-Windows.zip
           asset_content_type: application/zip
-        continue-on-error: true  # Continue even if upload fails
 
       - name: Upload Release Assets (MacOS) (using latest version, with error handling)
         uses: actions/upload-release-asset@latest  # Update to latest version
@@ -90,4 +88,3 @@ jobs:
           asset_path: ./dist/CatPet-MacOS.zip
           asset_name: CatPet-MacOS.zip
           asset_content_type: application/zip
-        continue-on-error: true  # Continue even if upload fails
