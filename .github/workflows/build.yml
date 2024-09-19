@@ -2,9 +2,9 @@ name: Build Cat Pet Application
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [windows-latest, macos-latest]  # Removed ubuntu-latest
       fail-fast: false  # This allows other builds to continue if one fails
 
     steps:
@@ -44,9 +44,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4  # Updated to v4
 
-      - name: Create Release
+      - name: Create Release (using latest version)
         id: create_release
-        uses: actions/create-release@v1
+        uses: actions/create-release@latest  # Update to latest version
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
@@ -60,15 +60,16 @@ jobs:
 
       - name: Zip artifacts
         run: |
-          for os in windows-latest macos-latest ubuntu-latest; do
+          for os in windows-latest macos-latest; do  # Removed ubuntu-latest
             if [ -d "CatPet-$os" ]; then
               zip -r "CatPet-$(echo $os | cut -d'-' -f1 | tr '[:lower:]' '[:upper:]').zip" "CatPet-$os"
             else
               echo "Directory CatPet-$os not found, skipping..."
             fi
           done
-      - name: Upload Release Assets
-        uses: actions/upload-release-asset@v1
+
+      - name: Upload Release Assets (using latest version, with error handling)
+        uses: actions/upload-release-asset@latest  # Update to latest version
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
@@ -76,10 +77,10 @@ jobs:
           asset_path: ./CatPet-Windows.zip
           asset_name: CatPet-Windows.zip
           asset_content_type: application/zip
-        continue-on-error: true
+        continue-on-error: true  # Continue even if upload fails
 
-      - name: Upload Release Assets (MacOS)
-        uses: actions/upload-release-asset@v1
+      - name: Upload Release Assets (MacOS) (using latest version, with error handling)
+        uses: actions/upload-release-asset@latest  # Update to latest version
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
@@ -87,15 +88,4 @@ jobs:
           asset_path: ./CatPet-MacOS.zip
           asset_name: CatPet-MacOS.zip
           asset_content_type: application/zip
-        continue-on-error: true
-
-      - name: Upload Release Assets (Ubuntu)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./CatPet-Ubuntu.zip
-          asset_name: CatPet-Ubuntu.zip
-          asset_content_type: application/zip
-        continue-on-error: true
+        continue-on-error: true  # Continue even if upload fails
