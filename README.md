@@ -46,7 +46,7 @@ A desktop kitty that sleeps, wanders around, and keeps you company on your scree
 ## Run Instructions
 After activating the virtual environment, run the following command in the project root directory:
 ```
-python main.py
+python3 main.py
 ```
 
 ## Improvements and Future Features
