@@ -1,5 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import sys
+import PyInstaller.config
+
+PyInstaller.config.CONF['distpath'] = "dist"
 block_cipher = None
 
 a = Analysis(['main.py'],
@@ -47,5 +51,14 @@ coll = COLLECT(exe,
 if sys.platform == 'darwin':
     app = BUNDLE(coll,
                  name='CatPet.app',
-                 icon=None,  # You can specify an .icns file here for the app icon
-                 bundle_identifier=None)
+                 icon=None,  # Replace with 'path/to/your/icon.icns' if you have an icon file
+                 bundle_identifier='com.yourdomain.catpet',
+                 info_plist={
+                     'CFBundleName': 'Cat Pet',
+                     'CFBundleDisplayName': 'Cat Pet',
+                     'CFBundleGetInfoString': "Cat Pet Desktop Application",
+                     'CFBundleVersion': "1.0.0",
+                     'CFBundleShortVersionString': "1.0.0",
+                     'NSHighResolutionCapable': True,
+                     'NSRequiresAquaSystemAppearance': False,  # For dark mode support
+                 })
