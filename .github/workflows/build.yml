@@ -16,26 +16,26 @@ jobs:
       fail-fast: false  # This allows other builds to continue if one fails
 
     steps:
-    - uses: actions/checkout@v4  # Updated to v4
+      - uses: actions/checkout@v4  # Updated to v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5  # Updated to v5
-      with:
-        python-version: '3.9'
+      - name: Set up Python
+        uses: actions/setup-python@v5  # Updated to v5
+        with:
+          python-version: '3.9'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install PyQt6 pyinstaller
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install PyQt6 pyinstaller
 
-    - name: Build with PyInstaller
-      run: pyinstaller --clean cat_pet.spec
+      - name: Build with PyInstaller
+        run: pyinstaller --clean cat_pet.spec
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: CatPet-${{ matrix.os }}
-        path: dist/CatPet
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4  # Updated to v4
+        with:
+          name: CatPet-${{ matrix.os }}
+          path: dist/CatPet
 
   release:
     needs: build
@@ -43,61 +43,61 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-    - uses: actions/checkout@v4  # Updated to v4
+      - uses: actions/checkout@v4  # Updated to v4
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-      with:
-        tag_name: v${{ github.run_number }}
-        release_name: Release ${{ github.run_number }}
-        draft: false
-        prerelease: false
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          draft: false
+          prerelease: false
 
-    - name: Download artifacts
-      uses: actions/download-artifact@v3
+      - name: Download artifacts
+        uses: actions/download-artifact@v4  # Updated to v4
 
-    - name: Zip artifacts
-      run: |
-        for os in windows-latest macos-latest ubuntu-latest; do
-          if [ -d "CatPet-$os" ]; then
-            zip -r "CatPet-$(echo $os | cut -d'-' -f1 | capitalize).zip" "CatPet-$os"
-          else
-            echo "Directory CatPet-$os not found, skipping..."
-          fi
-        done
+      - name: Zip artifacts
+        run: |
+          for os in windows-latest macos-latest ubuntu-latest; do
+            if [ -d "CatPet-$os" ]; then
+              zip -r "CatPet-$(echo $os | cut -d'-' -f1 | tr '[:lower:]' '[:upper:]').zip" "CatPet-$os"
+            else
+              echo "Directory CatPet-$os not found, skipping..."
+            fi
+          done
 
-    - name: Upload Release Assets
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./CatPet-Windows.zip
-        asset_name: CatPet-Windows.zip
-        asset_content_type: application/zip
-      continue-on-error: true
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./CatPet-Windows.zip
+          asset_name: CatPet-Windows.zip
+          asset_content_type: application/zip
+        continue-on-error: true
 
-    - name: Upload Release Assets
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./CatPet-Macos.zip
-        asset_name: CatPet-MacOS.zip
-        asset_content_type: application/zip
-      continue-on-error: true
+      - name: Upload Release Assets (MacOS)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./CatPet-MacOS.zip
+          asset_name: CatPet-MacOS.zip
+          asset_content_type: application/zip
+        continue-on-error: true
 
-    - name: Upload Release Assets
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./CatPet-Ubuntu.zip
-        asset_name: CatPet-Ubuntu.zip
-        asset_content_type: application/zip
-      continue-on-error: true
+      - name: Upload Release Assets (Ubuntu)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./CatPet-Ubuntu.zip
+          asset_name: CatPet-Ubuntu.zip
+          asset_content_type: application/zip
+        continue-on-error: true
