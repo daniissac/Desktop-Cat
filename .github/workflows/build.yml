@@ -29,13 +29,13 @@ jobs:
           pip install PyQt6 pyinstaller
 
       - name: Build with PyInstaller
-        run: pyinstaller --distpath dist/CatPet --onefile main.py
+        run: pyinstaller --distpath dist/KIND --onefile main.py
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4  # Updated to v4
         with:
-          name: CatPet-${{ matrix.os }}
-          path: dist/CatPet
+          name: KIND-${{ matrix.os }}
+          path: dist/KIND
 
   release:
     needs: build
@@ -62,10 +62,10 @@ jobs:
       - name: Zip artifacts
         run: |
           for os in windows-latest macos-latest; do  # Only consider Windows and macOS
-            if [ -d "CatPet-$os" ]; then
-              zip -r "CatPet-$(echo $os | cut -d'-' -f1 | tr '[:lower:]' '[:upper:]').zip" "CatPet-$os"
+            if [ -d "KIND-$os" ]; then
+              zip -r "KIND-$(echo $os | cut -d'-' -f1 | tr '[:lower:]' '[:upper:]').zip" "KIND-$os"
             else
-              echo "Directory CatPet-$os not found, skipping..."
+              echo "Directory KIND-$os not found, skipping..."
             fi
           done
 
@@ -75,8 +75,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/CatPet-Windows.zip
-          asset_name: CatPet-Windows.zip
+          asset_path: ./dist/KIND-Windows.zip
+          asset_name: KIND-Windows.zip
           asset_content_type: application/zip
 
       - name: Upload Release Assets (MacOS) (using latest version, with error handling)
@@ -85,6 +85,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/CatPet-MacOS.zip
-          asset_name: CatPet-MacOS.zip
+          asset_path: ./dist/KIND-MacOS.zip
+          asset_name: KIND-MacOS.zip
           asset_content_type: application/zip
