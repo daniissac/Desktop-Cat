@@ -19,8 +19,8 @@ A desktop kitty that sleeps, wanders around, and keeps you company on your scree
 
 1. Clone the repository:
    ```
-   git clone https://github.com/daniissac/desktop-cat.git
-   cd desktop-cat
+   git clone https://github.com/daniissac/kind.git
+   cd kind
    ```
 
 2. Set up a virtual environment:
