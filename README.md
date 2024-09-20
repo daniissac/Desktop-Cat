@@ -1,4 +1,4 @@
-# Desktop-Cat
+# Kitty in Desk
 
 <img src="idling.gif" alt="demo"/>
 
