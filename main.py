@@ -4,11 +4,20 @@ import math
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QMenu
 from PyQt6.QtCore import Qt, QTimer, QPointF
 from PyQt6.QtGui import QPixmap, QCursor, QAction
+import platform
+
+if platform.system() == "Windows":
+    import ctypes
+elif platform.system() == "Darwin":  # macOS
+    import subprocess
+elif platform.system() == "Linux":
+    import subprocess
 
 class CatPet(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.prevent_sleep()
 
     def initUI(self):
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
@@ -167,6 +176,36 @@ class CatPet(QMainWindow):
         exit_action.triggered.connect(self.close)
         context_menu.addAction(exit_action)
         context_menu.exec(self.mapToGlobal(position))
+
+
+    def prevent_sleep(self):
+        system = platform.system()
+        if system == "Windows":
+            ctypes.windll.kernel32.SetThreadExecutionState(
+                0x80000002  # ES_CONTINUOUS | ES_SYSTEM_REQUIRED
+            )
+        elif system == "Darwin":  # macOS
+            subprocess.run(["caffeinate", "-d", "-i", "-m", "-u", "&"])
+        elif system == "Linux":
+            subprocess.run(["xdg-screensaver", "suspend", str(self.winId())])
+        else:
+            print(f"Unsupported operating system: {system}")
+
+    def allow_sleep(self):
+        system = platform.system()
+        if system == "Windows":
+            ctypes.windll.kernel32.SetThreadExecutionState(0x80000000)  # ES_CONTINUOUS
+        elif system == "Darwin":  # macOS
+            subprocess.run(["killall", "caffeinate"])
+        elif system == "Linux":
+            subprocess.run(["xdg-screensaver", "resume", str(self.winId())])
+        else:
+            print(f"Unsupported operating system: {system}")
+
+    def closeEvent(self, event):
+        self.allow_sleep()
+        super().closeEvent(event)
+
 
 def main():
     app = QApplication(sys.argv)
