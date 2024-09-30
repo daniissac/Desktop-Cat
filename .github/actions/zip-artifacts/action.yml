@@ -1,0 +1,15 @@
+name: 'Zip Artifacts'
+description: 'Zip KIND artifacts based on the operating system'
+runs:
+  using: "composite"
+  steps:
+    - name: Zip artifacts (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        Compress-Archive -Path .\dist\KIND.exe -DestinationPath KIND-Windows.zip
+      shell: pwsh
+    - name: Zip artifacts (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        zip -r KIND-macOS.zip dist/KIND.app
+      shell: bash

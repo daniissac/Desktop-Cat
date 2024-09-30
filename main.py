@@ -1,6 +1,7 @@
 import sys
 import random
 import math
+import argparse
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QMenu
 from PyQt6.QtCore import Qt, QTimer, QPointF
 from PyQt6.QtGui import QPixmap, QCursor, QAction
@@ -12,6 +13,8 @@ elif platform.system() == "Darwin":  # macOS
     import subprocess
 elif platform.system() == "Linux":
     import subprocess
+
+VERSION = "1.0.0"  # Update this manually or dynamically
 
 class CatPet(QMainWindow):
     def __init__(self):
@@ -208,6 +211,10 @@ class CatPet(QMainWindow):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="KIND Application")
+    parser.add_argument('--version', action='version', version=f'%(prog)s {VERSION}')
+    args = parser.parse_args()
+
     app = QApplication(sys.argv)
     cat = CatPet()
     cat.show()
