@@ -46,7 +46,9 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           cd dist && zip -r ../KIND-macOS.zip KIND.app
-        shell: bash      - name: Upload artifacts
+        shell: bash      
+        
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: KIND-${{ runner.os }}
