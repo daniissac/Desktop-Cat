@@ -1,0 +1,73 @@
+name: Build and Release KIND
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install PyQt6 pyinstaller
+      - name: Build with PyInstaller
+        run: pyinstaller --distpath dist/KIND --onefile main.py
+      - name: Zip artifacts
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            7z a KIND-${{ runner.os }}.zip ./dist/KIND/*
+          else
+            zip -r KIND-${{ runner.os }}.zip ./dist/KIND
+          fi
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: KIND-${{ runner.os }}
+          path: KIND-${{ runner.os }}.zip
+
+  release:
+    needs: build
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          draft: false
+          prerelease: false
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          asset_name="KIND-${{ runner.os }}.zip"
+          echo "Uploading $asset_name"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            curl.exe -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$asset_name" "${{ steps.create_release.outputs.upload_url }}?name=$asset_name"
+          else
+            curl -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$asset_name" "${{ steps.create_release.outputs.upload_url }}?name=$asset_name"
+          fi
