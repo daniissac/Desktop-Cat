@@ -39,7 +39,7 @@ jobs:
 
   release:
     needs: build
-    runs-on: [windows-latest, macos-latest]
+    runs-on: [self-hosted]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
