@@ -107,4 +107,4 @@ jobs:
             Write-Error "Asset file not found: $assetPath"
             exit 1
           }
-        shell: pwsh        shell: pwsh
+        shell: pwsh
