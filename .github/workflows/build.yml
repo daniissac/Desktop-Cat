@@ -97,11 +97,8 @@ jobs:
           
           if (Test-Path $assetPath) {
             Write-Output "Uploading $assetName"
-            if ("${{ runner.os }}" -eq "Windows") {
-              curl.exe -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$assetPath" "${{ needs.create_release.outputs.upload_url }}?name=$assetName"
-            } else {
-              curl -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$assetPath" "${{ needs.create_release.outputs.upload_url }}?name=$assetName"
-            }
+            $uploadUrl = "${{ needs.create_release.outputs.upload_url }}".Replace('{?name,label}', "?name=$assetName")
+            curl.exe -X POST -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" -F "file=@$assetPath" $uploadUrl
           } else {
             Write-Error "Asset file not found: $assetPath"
             exit 1
