@@ -58,19 +58,20 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: Create Release
         id: create_release
-        uses: actions/create-release@latest
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
-          draft: false
-          prerelease: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          release_url=$(gh release create v${{ github.run_number }} \
+            --title "Release ${{ github.run_number }}" \
+            --generate-notes)
+          echo "upload_url=${release_url}/assets{?name,label}" >> $GITHUB_OUTPUT
 
   upload_assets:
     needs: create_release
