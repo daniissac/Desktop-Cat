@@ -4,9 +4,10 @@ import math
 import platform
 import ctypes
 import subprocess
-from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QMenu
+import os
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel
 from PyQt6.QtCore import Qt, QTimer, QPointF
-from PyQt6.QtGui import QPixmap, QCursor, QAction
+from PyQt6.QtGui import QPixmap
 
 
 class CatPet(QMainWindow):
@@ -17,7 +18,8 @@ class CatPet(QMainWindow):
 
     def initUI(self):
         self.setWindowFlags(
-            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
+            Qt.WindowType.FramelessWindowHint |
+            Qt.WindowType.WindowStaysOnTopHint
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
@@ -83,7 +85,9 @@ class CatPet(QMainWindow):
         elif platform.system() == 'Darwin':  # macOS
             subprocess.run(['caffeinate', '-d', '-w', str(os.getpid())])
         elif platform.system() == 'Linux':
-            subprocess.run(['systemd-inhibit', '--what=idle', 'sleep', 'infinity'])
+            subprocess.run([
+                'systemd-inhibit', '--what=idle', 'sleep', 'infinity'
+            ])
 
     def allow_sleep(self):
         if platform.system() == 'Windows':
