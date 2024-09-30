@@ -24,7 +24,11 @@ jobs:
         shell: bash
       - name: Zip artifacts
         run: |
-          cd dist && zip -r ../KIND-${{ runner.os }}.zip KIND*
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            powershell Compress-Archive -Path dist\KIND\* -DestinationPath KIND-Windows.zip
+          else
+            cd dist && zip -r ../KIND-${{ runner.os }}.zip KIND*
+          fi
         shell: bash
       - uses: actions/upload-artifact@v4
         with:
