@@ -26,12 +26,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install PyQt6 pyinstaller
       - name: Build with PyInstaller
-        run: pyinstaller --distpath dist/CatPet --onefile main.py
+        run: pyinstaller --distpath dist/kind --onefile main.py
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: CatPet-${{ matrix.os }}
-          path: dist/CatPet
+          name: kind-${{ matrix.os }}
+          path: dist/kind
 
   release:
     needs: build
@@ -57,11 +57,10 @@ jobs:
         uses: actions/download-artifact@v4
       - name: Zip artifacts
         run: |
-          os_name=$(echo ${{ runner.os }} | tr '[:lower:]' '[:upper:]')
-          if [ -d "CatPet-${{ matrix.os }}" ]; then
-            zip -r "CatPet-$os_name.zip" "CatPet-${{ matrix.os }}"
+          if [ -d "kind-${{ matrix.os }}" ]; then
+            zip -r "kind-${{ matrix.os }}.zip" "kind-${{ matrix.os }}"
           else
-            echo "Directory CatPet-${{ matrix.os }} not found, skipping..."
+            echo "Directory kind-${{ matrix.os }} not found, skipping..."
           fi
       - name: Upload Release Assets (using latest version, with error handling)
         uses: actions/upload-release-asset@latest
@@ -69,8 +68,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/CatPet-Windows.zip
-          asset_name: CatPet-Windows.zip
+          asset_path: ./dist/kind-windows-latest.zip
+          asset_name: kind-windows-latest.zip
           asset_content_type: application/zip
       - name: Upload Release Assets (MacOS) (using latest version, with error handling)
         uses: actions/upload-release-asset@latest
@@ -78,6 +77,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/CatPet-MacOS.zip
-          asset_name: CatPet-MacOS.zip
+          asset_path: ./dist/kind-macos-latest.zip
+          asset_name: kind-macos-latest.zip
           asset_content_type: application/zip
