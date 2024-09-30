@@ -1,5 +1,4 @@
-
-name: Build Cat Pet Application
+name: Build KIND
 
 on:
   push:
@@ -14,25 +13,22 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
-      fail-fast: false  # This allows other builds to continue if one fails
+      fail-fast: false
 
     steps:
-      - uses: actions/checkout@v4  # Updated to v4
-
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v5  # Updated to v5
+        uses: actions/setup-python@v5
         with:
           python-version: '3.9'
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install PyQt6 pyinstaller
       - name: Build with PyInstaller
         run: pyinstaller --distpath dist/CatPet --onefile main.py
-
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4  # Updated to v4
+        uses: actions/upload-artifact@v4
         with:
           name: CatPet-${{ matrix.os }}
           path: dist/CatPet
@@ -43,11 +39,10 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - uses: actions/checkout@v4  # Updated to v4
-
+      - uses: actions/checkout@v4
       - name: Create Release
         id: create_release
-        uses: actions/create-release@latest 
+        uses: actions/create-release@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
@@ -55,21 +50,18 @@ jobs:
           release_name: Release ${{ github.run_number }}
           draft: false
           prerelease: false
-
       - name: Download artifacts
-        uses: actions/download-artifact@v4 
-
+        uses: actions/download-artifact@v4
       - name: Zip artifacts
         run: |
-          for os in windows-latest macos-latest; do  # Only consider Windows and macOS
-            if [ -d "CatPet-$os" ]; then
-              zip -r "CatPet-$(echo $os | cut -d'-' -f1 | tr '[:lower:]' '[:upper:]').zip" "CatPet-$os"
-            else
-              echo "Directory CatPet-$os not found, skipping..."
-            fi
-          done
+          os_name=$(echo ${{ runner.os }} | tr '[:lower:]' '[:upper:]')
+          if [ -d "CatPet-${{ matrix.os }}" ]; then
+            zip -r "CatPet-$os_name.zip" "CatPet-${{ matrix.os }}"
+          else
+            echo "Directory CatPet-${{ matrix.os }} not found, skipping..."
+          fi
       - name: Upload Release Assets (using latest version, with error handling)
-        uses: actions/upload-release-asset@latest  # Update to latest version
+        uses: actions/upload-release-asset@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
@@ -77,9 +69,8 @@ jobs:
           asset_path: ./dist/CatPet-Windows.zip
           asset_name: CatPet-Windows.zip
           asset_content_type: application/zip
-
       - name: Upload Release Assets (MacOS) (using latest version, with error handling)
-        uses: actions/upload-release-asset@latest  # Update to latest version
+        uses: actions/upload-release-asset@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
