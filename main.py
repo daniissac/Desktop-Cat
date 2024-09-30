@@ -1,20 +1,10 @@
 import sys
 import random
 import math
-import argparse
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QMenu
 from PyQt6.QtCore import Qt, QTimer, QPointF
 from PyQt6.QtGui import QPixmap, QCursor, QAction
-import platform
 
-if platform.system() == "Windows":
-    import ctypes
-elif platform.system() == "Darwin":  # macOS
-    import subprocess
-elif platform.system() == "Linux":
-    import subprocess
-
-VERSION = "1.0.0"  # Update this manually or dynamically
 
 class CatPet(QMainWindow):
     def __init__(self):
@@ -23,7 +13,9 @@ class CatPet(QMainWindow):
         self.prevent_sleep()
 
     def initUI(self):
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
+        )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         self.label = QLabel(self)
@@ -36,17 +28,23 @@ class CatPet(QMainWindow):
         self.pet_width = 72
         self.pet_height = 64
 
-        self.pos = QPointF(random.randint(0, self.screen_width - self.pet_width),
-                           random.randint(0, self.screen_height - self.pet_height))
+        self.pos = QPointF(
+            random.randint(0, self.screen_width - self.pet_width),
+            random.randint(0, self.screen_height - self.pet_height)
+        )
 
-        self.setGeometry(int(self.pos.x()), int(self.pos.y()), self.pet_width, self.pet_height)
+        self.setGeometry(
+            int(self.pos.x()), int(self.pos.y()), self.pet_width, self.pet_height
+        )
 
         self.load_images()
 
         self.i_frame = 0
         self.state = 0  # Start in idle state
         self.direction = QPointF(random.uniform(-1, 1), random.uniform(-1, 1))
-        self.direction /= math.sqrt(self.direction.x()**2 + self.direction.y()**2)  # Normalize
+        self.direction /= math.sqrt(
+            self.direction.x()**2 + self.direction.y()**2
+        )  # Normalize
 
         self.frame = self.idle[0]
         self.label.setPixmap(self.frame)
@@ -68,12 +66,10 @@ class CatPet(QMainWindow):
 
     def load_images(self):
         self.idle = [QPixmap(f'assets/idle{i}.png') for i in range(1, 5)]
-        self.idle_to_sleeping = [QPixmap(f'assets/sleeping{i}.png') for i in range(1, 7)]
+        self.idle_to_sleeping = [
+            QPixmap(f'assets/sleeping{i}.png') for i in range(1, 7)
+        ]
         self.sleeping = [QPixmap(f'assets/zzz{i}.png') for i in range(1, 5)]
-        self.sleeping_to_idle = [QPixmap(f'assets/sleeping{i}.png') for i in range(6, 0, -1)]
-        self.walking_left = [QPixmap(f'assets/walkingleft{i}.png') for i in range(1, 5)]
-        self.walking_right = [QPixmap(f'assets/walkingright{i}.png') for i in range(1, 5)]
-        self.meow = self.idle  # Use idle animation for meowing if no specific meow animation is available
 
     def animate(self, array, slowdown_factor=1):
         self.animation_slowdown += 1
@@ -211,14 +207,11 @@ class CatPet(QMainWindow):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="KIND Application")
-    parser.add_argument('--version', action='version', version=f'%(prog)s {VERSION}')
-    args = parser.parse_args()
-
     app = QApplication(sys.argv)
     cat = CatPet()
     cat.show()
     sys.exit(app.exec())
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
