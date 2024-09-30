@@ -28,11 +28,12 @@ jobs:
         run: pyinstaller --distpath dist/KIND --onefile main.py
       - name: Zip artifacts
         run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
+          if ("${{ runner.os }}" -eq "Windows") {
             7z a KIND-${{ runner.os }}.zip ./dist/KIND/*
-          else
+          } else {
             zip -r KIND-${{ runner.os }}.zip ./dist/KIND
-          fi
+          }
+        shell: pwsh
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -64,10 +65,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          asset_name="KIND-${{ runner.os }}.zip"
-          echo "Uploading $asset_name"
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            curl.exe -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$asset_name" "${{ steps.create_release.outputs.upload_url }}?name=$asset_name"
-          else
-            curl -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$asset_name" "${{ steps.create_release.outputs.upload_url }}?name=$asset_name"
-          fi
+          $assetName = "KIND-${{ runner.os }}.zip"
+          Write-Output "Uploading $assetName"
+          if ("${{ runner.os }}" -eq "Windows") {
+            curl.exe -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$assetName" "${{ steps.create_release.outputs.upload_url }}?name=$assetName"
+          } else {
+            curl -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$assetName" "${{ steps.create_release.outputs.upload_url }}?name=$assetName"
+          }
+        shell: pwsh
