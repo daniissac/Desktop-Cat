@@ -61,15 +61,31 @@ jobs:
           prerelease: false
       - name: Download artifacts
         uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+      - name: Debug Directory Contents
+        run: |
+          Write-Output "Current directory:"
+          Get-Location
+          Write-Output "Directory contents:"
+          Get-ChildItem -Recurse
+        shell: pwsh
       - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $assetName = "KIND-${{ runner.os }}.zip"
-          Write-Output "Uploading $assetName"
-          if ("${{ runner.os }}" -eq "Windows") {
-            curl.exe -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$assetName" "${{ steps.create_release.outputs.upload_url }}?name=$assetName"
+          $assetPath = "./artifacts/KIND-${{ runner.os }}/$assetName"
+          
+          if (Test-Path $assetPath) {
+            Write-Output "Uploading $assetName"
+            if ("${{ runner.os }}" -eq "Windows") {
+              curl.exe -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$assetPath" "${{ steps.create_release.outputs.upload_url }}?name=$assetName"
+            } else {
+              curl -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$assetPath" "${{ steps.create_release.outputs.upload_url }}?name=$assetName"
+            }
           } else {
-            curl -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$assetName" "${{ steps.create_release.outputs.upload_url }}?name=$assetName"
+            Write-Error "Asset file not found: $assetPath"
+            exit 1
           }
         shell: pwsh
