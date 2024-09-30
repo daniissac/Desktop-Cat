@@ -13,103 +13,44 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.9'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install PyQt6 pyinstaller
-      - name: Build with PyInstaller (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          pyinstaller --name=KIND --windowed --add-data "assets;assets" main.py
-        shell: pwsh
-
-      - name: Build with PyInstaller (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          pyinstaller --name=KIND --windowed --add-data "assets:assets" main.py
+      - run: pip install PyQt6 pyinstaller
+      - name: Build with PyInstaller
+        run: pyinstaller --name=KIND --windowed --add-data "assets:assets" main.py
         shell: bash
-
-      - name: Zip artifacts (Windows)
-        if: runner.os == 'Windows'
+      - name: Zip artifacts
         run: |
-          Compress-Archive -Path .\dist\KIND\* -DestinationPath KIND-Windows.zip
-        shell: pwsh
-
-      - name: Zip artifacts (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          cd dist && zip -r ../KIND-macOS.zip KIND.app
-        shell: bash      
-        
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+          cd dist && zip -r ../KIND-${{ runner.os }}.zip KIND*
+        shell: bash
+      - uses: actions/upload-artifact@v4
         with:
           name: KIND-${{ runner.os }}
           path: KIND-${{ runner.os }}.zip
 
-  create_release:
+  release:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: write
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       - name: Create Release
-        id: create_release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          release_url=$(gh release create v${{ github.run_number }} \
+          gh release create v${{ github.run_number }} \
             --title "Release ${{ github.run_number }}" \
-            --generate-notes)
-          echo "upload_url=${release_url}/assets{?name,label}" >> $GITHUB_OUTPUT
-  upload_assets:
-    needs: create_release
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: KIND-${{ runner.os }}
-          path: ./artifacts
-      - name: Debug Directory Contents
-        run: |
-          Write-Output "Current directory:"
-          Get-Location
-          Write-Output "Directory contents:"
-          Get-ChildItem -Recurse
-        shell: pwsh
-      - name: Upload Release Asset
+            --generate-notes
+      - uses: actions/download-artifact@v4
+      - name: Upload Release Assets
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $assetName = "KIND-${{ runner.os }}.zip"
-          $assetPath = "./artifacts/$assetName"
-          
-          if (Test-Path $assetPath) {
-            Write-Output "Uploading $assetName"
-            $uploadUrl = "${{ needs.create_release.outputs.upload_url }}".Replace('{?name,label}', "?name=$assetName")
-            if ("${{ runner.os }}" -eq "Windows") {
-              curl.exe -X POST -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" -F "file=@$assetPath" $uploadUrl
-            } else {
-              curl -X POST -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" -F "file=@$assetPath" $uploadUrl
-            }
-          } else {
-            Write-Error "Asset file not found: $assetPath"
-            exit 1
-          }
-        shell: pwsh
+          for zip in KIND-*.zip; do
+            gh release upload v${{ github.run_number }} $zip
+          done
