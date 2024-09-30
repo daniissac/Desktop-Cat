@@ -27,29 +27,26 @@ jobs:
       - name: Build with PyInstaller (Windows)
         if: runner.os == 'Windows'
         run: |
-          pyinstaller --name=KIND --windowed --onefile --add-data "assets;assets" --hidden-import PyQt6 main.py
-          Copy-Item -Path "assets" -Destination "dist\assets" -Recurse
+          pyinstaller --name=KIND --windowed --add-data "assets;assets" main.py
         shell: pwsh
 
       - name: Build with PyInstaller (macOS)
         if: runner.os == 'macOS'
         run: |
-          pyinstaller --name=KIND --windowed --onefile --add-data "assets:assets" --hidden-import PyQt6 main.py
-          cp -R assets dist/KIND.app/Contents/MacOS/
+          pyinstaller --name=KIND --windowed --add-data "assets:assets" main.py
         shell: bash
 
       - name: Zip artifacts (Windows)
         if: runner.os == 'Windows'
         run: |
-          Compress-Archive -Path .\dist\* -DestinationPath KIND-Windows.zip
+          Compress-Archive -Path .\dist\KIND\* -DestinationPath KIND-Windows.zip
         shell: pwsh
 
       - name: Zip artifacts (macOS)
         if: runner.os == 'macOS'
         run: |
-          cd dist && zip -r ../KIND-macOS.zip *
-        shell: bash      
-      - name: Upload artifacts
+          cd dist && zip -r ../KIND-macOS.zip KIND.app
+        shell: bash      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: KIND-${{ runner.os }}
