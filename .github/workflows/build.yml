@@ -39,7 +39,7 @@ jobs:
 
   release:
     needs: build
-    runs-on: [self-hosted]
+    runs-on: ${{ matrix.os }}
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
