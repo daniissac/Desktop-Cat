@@ -63,6 +63,8 @@ jobs:
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Create Release
         id: create_release
         env:
@@ -72,7 +74,6 @@ jobs:
             --title "Release ${{ github.run_number }}" \
             --generate-notes)
           echo "upload_url=${release_url}/assets{?name,label}" >> $GITHUB_OUTPUT
-
   upload_assets:
     needs: create_release
     runs-on: ${{ matrix.os }}
