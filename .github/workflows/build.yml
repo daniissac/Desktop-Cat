@@ -24,31 +24,40 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install PyQt6 pyinstaller
-      - name: Build with PyInstaller
-        run: pyinstaller --distpath dist/KIND --onefile main.py
-      - name: Zip artifacts
+      - name: Build with PyInstaller (Windows)
+        if: runner.os == 'Windows'
         run: |
-          if ("${{ runner.os }}" -eq "Windows") {
-            7z a KIND-${{ runner.os }}.zip ./dist/KIND/*
-          } else {
-            zip -r KIND-${{ runner.os }}.zip ./dist/KIND
-          }
+          pyinstaller --name=KIND --windowed --onefile --add-data "resources;resources" main.py
         shell: pwsh
+      - name: Build with PyInstaller (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          pyinstaller --name=KIND --windowed --onefile --add-data "resources:resources" main.py
+          mv dist/KIND dist/KIND.app
+        shell: bash
+      - name: Zip artifacts (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Compress-Archive -Path .\dist\KIND.exe -DestinationPath KIND-Windows.zip
+        shell: pwsh
+      - name: Zip artifacts (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          zip -r KIND-macOS.zip dist/KIND.app
+        shell: bash
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: KIND-${{ runner.os }}
           path: KIND-${{ runner.os }}.zip
 
-  release:
+  create_release:
     needs: build
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-      - uses: actions/checkout@v4
       - name: Create Release
         id: create_release
         uses: actions/create-release@latest
@@ -59,9 +68,18 @@ jobs:
           release_name: Release ${{ github.run_number }}
           draft: false
           prerelease: false
+
+  upload_assets:
+    needs: create_release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
+          name: KIND-${{ runner.os }}
           path: ./artifacts
       - name: Debug Directory Contents
         run: |
@@ -75,14 +93,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $assetName = "KIND-${{ runner.os }}.zip"
-          $assetPath = "./artifacts/KIND-${{ runner.os }}/$assetName"
+          $assetPath = "./artifacts/$assetName"
           
           if (Test-Path $assetPath) {
             Write-Output "Uploading $assetName"
             if ("${{ runner.os }}" -eq "Windows") {
-              curl.exe -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$assetPath" "${{ steps.create_release.outputs.upload_url }}?name=$assetName"
+              curl.exe -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$assetPath" "${{ needs.create_release.outputs.upload_url }}?name=$assetName"
             } else {
-              curl -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$assetPath" "${{ steps.create_release.outputs.upload_url }}?name=$assetName"
+              curl -H "Authorization: token $env:GITHUB_TOKEN" -H "Content-Type: application/zip" --data-binary "@$assetPath" "${{ needs.create_release.outputs.upload_url }}?name=$assetName"
             }
           } else {
             Write-Error "Asset file not found: $assetPath"
