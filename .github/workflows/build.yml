@@ -35,7 +35,10 @@ jobs:
 
   release:
     needs: build
-    runs-on: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
