@@ -20,16 +20,21 @@ jobs:
           python-version: '3.9'
       - run: pip install PyQt6 pyinstaller
       - name: Build with PyInstaller
-        run: pyinstaller --name=KIND --windowed --add-data "assets:assets" main.py
+        run: |
+          if [ "${{ matrix.os }}" == "macos-latest" ]; then
+            pyinstaller --distpath dist/KIND --onefile --add-data "assets:assets" main.py
+          else
+            pyinstaller --distpath dist/KIND --onefile main.py
+          fi
         shell: bash
       - name: Zip artifacts
         run: |
           cd ./dist
           for os in windows-latest macos-latest; do
-            if [ -d "KIND-$os" ]; then
-              zip -r "../KIND-$(echo $os | cut -d'-' -f1 | tr '[:lower:]' '[:upper:]').zip" "KIND-$os"
+            if [ -d "KIND" ]; then
+              zip -r "../KIND-$(echo $os | cut -d'-' -f1 | tr '[:lower:]' '[:upper:]').zip" "KIND"
             else
-              echo "Directory KIND-$os not found, skipping..."
+              echo "Directory KIND not found for $os, skipping..."
             fi
           done
           cd ..
@@ -80,3 +85,4 @@ jobs:
           asset_path: ./KIND-MACOS.zip
           asset_name: KIND-MacOS.zip
           asset_content_type: application/zip
+      
