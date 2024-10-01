@@ -24,11 +24,15 @@ jobs:
         shell: bash
       - name: Zip artifacts
         run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            powershell Compress-Archive -Path dist\KIND\* -DestinationPath KIND-Windows.zip
-          else
-            cd dist && zip -r ../KIND-${{ runner.os }}.zip KIND*
-          fi
+          cd ./dist
+          for os in windows-latest macos-latest; do
+            if [ -d "KIND-$os" ]; then
+              zip -r "../KIND-$(echo $os | cut -d'-' -f1 | tr '[:lower:]' '[:upper:]').zip" "KIND-$os"
+            else
+              echo "Directory KIND-$os not found, skipping..."
+            fi
+          done
+          cd ..
         shell: bash
       - uses: actions/upload-artifact@v4
         with:
@@ -50,11 +54,26 @@ jobs:
           gh release create v${{ github.run_number }} \
             --title "Release ${{ github.run_number }}" \
             --generate-notes
-      - uses: actions/download-artifact@v4
-      - name: Upload Release Assets
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./dist      
+      - name: Upload Release Assets (Windows)
+        uses: actions/upload-release-asset@latest
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          for zip in KIND-*.zip; do
-            gh release upload v${{ github.run_number }} $zip
-          done
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./KIND-WINDOWS.zip
+          asset_name: KIND-Windows.zip
+          asset_content_type: application/zip
+
+      - name: Upload Release Assets (MacOS)
+        uses: actions/upload-release-asset@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./KIND-MACOS.zip
+          asset_name: KIND-MacOS.zip
+          asset_content_type: application/zip
