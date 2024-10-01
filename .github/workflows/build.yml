@@ -39,8 +39,8 @@ jobs:
             exit 1
           fi
           cd ..
-        shell: bash
-      
+          ls -la  # List files to verify zip creation
+        shell: bash      
       - uses: actions/upload-artifact@v4
         with:
           name: KIND-${{ runner.os }}
