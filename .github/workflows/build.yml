@@ -30,15 +30,17 @@ jobs:
       - name: Zip artifacts
         run: |
           cd ./dist
-          for os in windows-latest macos-latest; do
-            if [ -d "KIND" ]; then
-              zip -r "../KIND-$(echo $os | cut -d'-' -f1 | tr '[:lower:]' '[:upper:]').zip" "KIND"
-            else
-              echo "Directory KIND not found for $os, skipping..."
-            fi
-          done
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            powershell Compress-Archive -Path KIND -DestinationPath ../KIND-WINDOWS.zip
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            zip -r ../KIND-MACOS.zip KIND
+          else
+            echo "Unsupported OS"
+            exit 1
+          fi
           cd ..
         shell: bash
+      
       - uses: actions/upload-artifact@v4
         with:
           name: KIND-${{ runner.os }}
