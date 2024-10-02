@@ -1,4 +1,0 @@
-PyQt6
-pyinstaller
-flake8
-pytest
