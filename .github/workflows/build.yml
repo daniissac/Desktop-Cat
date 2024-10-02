@@ -31,9 +31,9 @@ jobs:
         run: |
           cd ./dist
           if [ "$RUNNER_OS" == "Windows" ]; then
-            powershell Compress-Archive -Path KIND -DestinationPath ../KIND-WINDOWS.zip
+            powershell Compress-Archive -Path KIND -DestinationPath ../KIND-Windows.zip
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            zip -r ../KIND-MACOS.zip KIND
+            zip -r ../KIND-macOS.zip KIND
           else
             echo "Unsupported OS"
             exit 1
@@ -74,7 +74,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./KIND-WINDOWS.zip
+          asset_path: ./KIND-Windows.zip
           asset_name: KIND-Windows.zip
           asset_content_type: application/zip
 
@@ -84,7 +84,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./KIND-MACOS.zip
+          asset_path: ./KIND-MaOS.zip
           asset_name: KIND-MacOS.zip
           asset_content_type: application/zip
       
