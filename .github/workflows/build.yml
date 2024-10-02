@@ -22,9 +22,9 @@ jobs:
       - name: Build with PyInstaller
         run: |
           if [ "${{ matrix.os }}" == "macos-latest" ]; then
-            pyinstaller --distpath dist/KIND --onefile --add-data "assets:assets" main.py
+            pyinstaller --distpath dist --windowed --name "KIND" --add-data "assets:assets" main.py
           else
-            pyinstaller --distpath dist/KIND --onefile main.py
+            pyinstaller --distpath dist --onefile --name "KIND" main.py
           fi
         shell: bash
       - name: Install zip on Windows
@@ -33,16 +33,18 @@ jobs:
           choco install zip unzip
       - name: Zip artifacts
         run: |
-          cd ./dist
           if [ "$RUNNER_OS" == "Windows" ]; then
-            zip -r ../KIND-Windows.zip KIND
+            cd dist
+            zip -r ../KIND-Windows.zip KIND.exe
+            cd ..
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            zip -r ../KIND-macOS.zip KIND
+            cd dist
+            zip -r ../KIND-macOS.zip KIND.app
+            cd ..
           else
             echo "Unsupported OS"
             exit 1
           fi
-          cd ..
           ls -la  # List files to verify zip creation
         shell: bash      
       - uses: actions/upload-artifact@v4
