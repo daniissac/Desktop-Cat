@@ -48,10 +48,7 @@ jobs:
 
   release:
     needs: build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
+    runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: write
@@ -70,24 +67,15 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          path: ./dist      
-      - name: Upload Release Assets (Windows)
-        uses: actions/upload-release-asset@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./KIND-Windows.zip
-          asset_name: KIND-Windows.zip
-          asset_content_type: application/zip
-
-      - name: Upload Release Assets (MacOS)
-        uses: actions/upload-release-asset@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./KIND-MacOS.zip
-          asset_name: KIND-MacOS.zip
-          asset_content_type: application/zip
-      
+          path: ./dist
+      - name: Upload Release Assets
+        run: |
+          for asset in ./dist/KIND-*/KIND-*.zip; do
+            asset_name=$(basename "$asset")
+            echo "Uploading $asset_name"
+            curl -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+                 -H "Content-Type: application/zip" \
+                 --data-binary @"$asset" \
+                 "${{ steps.create_release.outputs.upload_url }}?name=$asset_name"
+          done
+        shell: bash
