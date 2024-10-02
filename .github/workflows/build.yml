@@ -72,6 +72,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
+          upload_url=$(echo "${{ steps.create_release.outputs.upload_url }}" | sed 's/{?name,label}//')
           for asset in ./dist/KIND-*/KIND-*.zip; do
             asset_name=$(basename "$asset")
             echo "Uploading $asset_name"
@@ -80,6 +81,6 @@ jobs:
                  -H "Content-Type: application/zip" \
                  -H "Accept: application/vnd.github.v3+json" \
                  --data-binary @"$asset" \
-                 "${{ steps.create_release.outputs.upload_url }}?name=$(echo $asset_name | sed 's/ /%20/g')"
+                 "${upload_url}?name=$(echo $asset_name | sed 's/ /%20/g')"
           done
         shell: bash
