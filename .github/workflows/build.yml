@@ -74,7 +74,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./KIND-Windows.zip
+          asset_path: ./
           asset_name: KIND-Windows.zip
           asset_content_type: application/zip
 
@@ -84,7 +84,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./KIND-MaOS.zip
+          asset_path: ./
           asset_name: KIND-MacOS.zip
           asset_content_type: application/zip
       
