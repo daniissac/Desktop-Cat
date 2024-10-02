@@ -80,6 +80,6 @@ jobs:
                  -H "Content-Type: application/zip" \
                  -H "Accept: application/vnd.github.v3+json" \
                  --data-binary @"$asset" \
-                 "${{ steps.create_release.outputs.upload_url }}?name=$asset_name"
+                 "${{ steps.create_release.outputs.upload_url }}?name=$(echo $asset_name | sed 's/ /%20/g')"
           done
         shell: bash
