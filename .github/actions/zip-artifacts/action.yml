@@ -6,7 +6,7 @@ runs:
     - name: Zip artifacts (Windows)
       if: runner.os == 'Windows'
       run: |
-        Compress-Archive -Path .\dist\KIND.exe -DestinationPath KIND-Windows.zip
+        Compress-Archive -Path .\dist\KIND.exe -DestinationPath KIND-WINDOWS.zip
       shell: pwsh
     - name: Zip artifacts (macOS)
       if: runner.os == 'macOS'
