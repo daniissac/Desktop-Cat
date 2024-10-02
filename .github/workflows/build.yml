@@ -27,11 +27,15 @@ jobs:
             pyinstaller --distpath dist/KIND --onefile main.py
           fi
         shell: bash
+      - name: Install zip on Windows
+        if: runner.os == 'Windows'
+        run: |
+          choco install zip unzip
       - name: Zip artifacts
         run: |
           cd ./dist
           if [ "$RUNNER_OS" == "Windows" ]; then
-            powershell Compress-Archive -Path KIND -DestinationPath ../KIND-Windows.zip
+            zip -r ../KIND-Windows.zip KIND
           elif [ "$RUNNER_OS" == "macOS" ]; then
             zip -r ../KIND-macOS.zip KIND
           else
@@ -72,17 +76,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
+          upload_url=$(echo "${{ steps.create_release.outputs.upload_url }}" | sed 's/{?name,label}//')
           for asset in ./dist/KIND-*/KIND-*.zip; do
             asset_name=$(basename "$asset")
             echo "Uploading $asset_name"
-            
-            # Get a fresh upload URL for each asset
-            upload_url=$(curl -sH "Authorization: token ${{ secrets.GH_TOKEN }}" \
-                         https://api.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }} \
-                         | jq -r .upload_url | sed 's/{?name,label}//')
-            
             echo "Upload URL: ${upload_url}?name=$(echo $asset_name | sed 's/ /%20/g')"
-            
             curl --fail -X POST \
                  -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
                  -H "Content-Type: application/zip" \
