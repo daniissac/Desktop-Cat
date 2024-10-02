@@ -69,12 +69,16 @@ jobs:
         with:
           path: ./dist
       - name: Upload Release Assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           for asset in ./dist/KIND-*/KIND-*.zip; do
             asset_name=$(basename "$asset")
             echo "Uploading $asset_name"
-            curl -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+            curl --fail -X POST \
+                 -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
                  -H "Content-Type: application/zip" \
+                 -H "Accept: application/vnd.github.v3+json" \
                  --data-binary @"$asset" \
                  "${{ steps.create_release.outputs.upload_url }}?name=$asset_name"
           done
