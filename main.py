@@ -1,5 +1,10 @@
 import random
 import math
+import platform
+import ctypes
+import subprocess
+import os
+import sys
 from PyQt6.QtCore import Qt, QTimer, QPointF
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QMainWindow, QLabel, QMenu
