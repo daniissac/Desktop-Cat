@@ -6,7 +6,6 @@ A desktop kitty that sleeps, wanders around, and keeps you company on your scree
 
 ## Features
 - PyQt6-based application for a smooth, modern UI experience
-- Keeps the screen on while the script is running
 - Randomly chooses actions: idling, sleeping, and walking
 - Smooth animations with sprite management
 - Stays on top of other windows
