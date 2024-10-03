@@ -96,6 +96,19 @@ class CatPet(QMainWindow):
             # The subprocess will automatically terminate when the script ends
             pass
 
+    def show_context_menu(self, position):
+        context_menu = QMenu(self)
+        exit_action = context_menu.addAction("Exit")
+        exit_action.triggered.connect(self.close)
+        
+        # You can add more menu items here if needed
+        # For example:
+        # toggle_action = context_menu.addAction("Toggle Animation")
+        # toggle_action.triggered.connect(self.toggle_animation)
+
+        context_menu.exec_(self.mapToGlobal(position))
+
+
 
 def main():
     app = QApplication(sys.argv)
