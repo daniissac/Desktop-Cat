@@ -1,14 +1,8 @@
-import sys
 import random
 import math
-import platform
-import ctypes
-import subprocess
-import os
-from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QMenu
 from PyQt6.QtCore import Qt, QTimer, QPointF
 from PyQt6.QtGui import QPixmap
-
+from PyQt6.QtWidgets import QMainWindow, QLabel, QMenu
 
 class CatPet(QMainWindow):
     def __init__(self):
@@ -69,6 +63,16 @@ class CatPet(QMainWindow):
 
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_context_menu)
+                self.animation_speed = 200  # ms between frame changes
+        self.movement_speed = 2  # pixels per update
+        self.state_timer = QTimer(self)
+        self.state_timer.timeout.connect(self.change_state)
+        self.state_timer.start(random.randint(5000, 10000))  # Change state every 5-10 seconds
+
+        self.animation_timer = QTimer(self)
+        self.animation_timer.timeout.connect(self.update_animation)
+        self.animation_timer.start(self.animation_speed)
+
 
     def load_images(self):
         self.idle = [QPixmap(f'assets/idle{i}.png') for i in range(1, 5)]
@@ -107,6 +111,75 @@ class CatPet(QMainWindow):
         # toggle_action.triggered.connect(self.toggle_animation)
 
         context_menu.exec_(self.mapToGlobal(position))
+
+    def update(self):
+        if not self.is_dragging and self.state == 0:  # Only move if not being dragged and in idle state
+            new_pos = self.pos + self.direction * self.movement_speed
+            if self.is_within_screen(new_pos):
+                self.pos = new_pos
+                self.setGeometry(int(self.pos.x()), int(self.pos.y()), self.pet_width, self.pet_height)
+            else:
+                self.direction = QPointF(random.uniform(-1, 1), random.uniform(-1, 1))
+                self.direction /= math.sqrt(self.direction.x()**2 + self.direction.y()**2)
+
+        if self.meow_timer > 0:
+            self.meow_timer -= 1
+
+    def update_animation(self):
+        if self.state == 0:  # Idle
+            self.i_frame = (self.i_frame + 1) % len(self.idle)
+            self.frame = self.idle[self.i_frame]
+        elif self.state == 1:  # Transition to sleeping
+            if self.i_frame < len(self.idle_to_sleeping) - 1:
+                self.i_frame += 1
+            self.frame = self.idle_to_sleeping[self.i_frame]
+        elif self.state == 2:  # Sleeping
+            self.i_frame = (self.i_frame + 1) % len(self.sleeping)
+            self.frame = self.sleeping[self.i_frame]
+        
+        self.label.setPixmap(self.frame)
+
+    def change_state(self):
+        if self.state == 0:
+            self.state = 1  # Start transition to sleeping
+            self.i_frame = 0
+        elif self.state == 1:
+            self.state = 2  # Start sleeping
+            self.i_frame = 0
+        else:
+            self.state = 0  # Back to idle
+            self.i_frame = 0
+        
+        self.state_timer.start(random.randint(5000, 10000))
+
+    def is_within_screen(self, pos):
+        return (0 <= pos.x() <= self.screen_width - self.pet_width and
+                0 <= pos.y() <= self.screen_height - self.pet_height)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.is_dragging = True
+            self.click_start_pos = event.pos()
+            self.window_start_pos = self.pos()
+            if self.meow_timer == 0:
+                print("Meow!")  # Replace with actual sound playing logic
+                self.meow_timer = 50  # Set cooldown for meowing
+
+    def mouseMoveEvent(self, event):
+        if self.is_dragging:
+            delta = event.pos() - self.click_start_pos
+            new_pos = self.window_start_pos + delta
+            if self.is_within_screen(new_pos):
+                self.pos = new_pos
+                self.setGeometry(int(self.pos.x()), int(self.pos.y()), self.pet_width, self.pet_height)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.is_dragging = False
+
+    def closeEvent(self, event):
+        self.allow_sleep()
+        super().closeEvent(event)
 
 
 
