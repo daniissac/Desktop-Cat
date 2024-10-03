@@ -68,16 +68,6 @@ class CatPet(QMainWindow):
 
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_context_menu)
-        self.animation_speed = 200  # ms between frame changes
-        self.movement_speed = 2  # pixels per update
-        self.state_timer = QTimer(self)
-        self.state_timer.timeout.connect(self.change_state)
-        self.state_timer.start(random.randint(5000, 10000))  # Change state every 5-10 seconds
-
-        self.animation_timer = QTimer(self)
-        self.animation_timer.timeout.connect(self.update_animation)
-        self.animation_timer.start(self.animation_speed)
-
 
     def load_images(self):
         self.idle = [QPixmap(f'assets/idle{i}.png') for i in range(1, 5)]
